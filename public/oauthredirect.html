@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Redirecionando...</title>
+    <script>
+        // Versão otimizada para Expo Web
+        if (window.opener) {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const authData = {
+                    type: 'oauth-complete',
+                    url: window.location.href
+                };
+                window.opener.postMessage(authData, window.location.origin);
+                window.close();
+            } catch (error) {
+                console.error('Error in redirect page:', error);
+                document.body.innerHTML = '<p>Ocorreu um erro. Você pode fechar esta janela.</p>';
+            }
+        } else {
+            document.body.innerHTML = '<p>Redirecionamento concluído. Você pode fechar esta janela.</p>';
+        }
+    </script>
+</head>
+
+<body>
+    <p>Redirecionando de volta para o aplicativo...</p>
+</body>
+
+</html>
