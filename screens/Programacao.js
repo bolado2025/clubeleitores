@@ -128,24 +128,6 @@ export default function Programacao() {
                 </>
             )}            
 
-            <View style={styles.buttons}>
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => navigation.navigate('ProgramacaoForm', {
-                        idEvento,
-                        idProgramacao: item._id
-                    })}
-                >
-                    <Text style={styles.buttonText}>Editar</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[styles.button, { backgroundColor: '#e74c3c' }]}
-                    onPress={() => confirmarExclusao(item._id)}
-                >
-                    <Text style={styles.buttonText}>Excluir</Text>
-                </TouchableOpacity>
-            </View>
         </View>
     );
 
@@ -167,12 +149,6 @@ export default function Programacao() {
                 }
             />
 
-            <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => navigation.navigate('ProgramacaoForm', { idEvento })}
-            >
-                <Text style={styles.addButtonText}>Adicionar Programação</Text>
-            </TouchableOpacity>
         </View>
     );
 

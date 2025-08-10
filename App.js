@@ -35,9 +35,11 @@ import DetalhesNoticia from './screens/DetalhesNoticias';
 import EmptyFeatureScreen from './screens/EmptyFeatureScreen';
 import * as SplashScreen from 'expo-splash-screen';
 import HomeScreen from './screens/Home';
-
-
-
+import Busca from './screens/Busca';
+import Calendar from './screens/Calendar';
+import Login from './screens/LoginScreen';
+import Perfil from './screens/ProfileScreen';
+ 
 const Stack = createNativeStackNavigator();
 
 const MainNavigator = () => {
@@ -45,55 +47,43 @@ const MainNavigator = () => {
   const { userInfo, signOut } = useAuth();
 
   return (
+
     <Stack.Navigator
-      initialRouteName={userInfo ? 'EndPoints' : 'Login'}
+      initialRouteName="Home"
       screenOptions={{
         header: (props) => <CustomHeader {...props} />,
       }}
     >
-      {/* Telas públicas */}
-      {!userInfo && (
-        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }}/>
-      )}
-
-      {/* Telas privadas (usuário logado) */}
-      {userInfo && (
-        <>
-          <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="EndPoints" component={Endpoints} />
-          <Stack.Screen name="AutorList" component={AutorList} />
-          <Stack.Screen name="AutorForm" component={AutorForm} />
-          <Stack.Screen name="AutorDetails" component={AutorDetails} />
-          <Stack.Screen name="AutorPublishings" component={AutorPublishings} />
-          <Stack.Screen name="ObraForm" component={ObraForm} />
-          <Stack.Screen name="ObraDetalhes" component={ObraDetalhes} />
-          <Stack.Screen name="Eventos" component={Eventos} />
-          <Stack.Screen name="EventoForm" component={EventoForm} />
-          <Stack.Screen name="EventoDetails" component={EventoDetails} />
-          <Stack.Screen name="Programacao" component={Programacao} />
-          <Stack.Screen name="ProgramacaoForm" component={ProgramacaoForm} />
-          <Stack.Screen name="ProgramacaoDetails" component={ProgramacaoDetails} />
-          <Stack.Screen name="UserList" component={UserList} />
-          <Stack.Screen name="UserForm" component={UserForm} />
-          <Stack.Screen name="ClippingForm" component={ClippingForm} />
-          <Stack.Screen name="EventoList" component={Eventos} />
-          <Stack.Screen name="ClippingList" component={ClippingList} />
-          <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
-          <Stack.Screen name="DetalhesNoticias" component={DetalhesNoticia} />
-          <Stack.Screen name="Descontos" component={EmptyFeatureScreen} initialParams={{ featureName: 'Descontos' }} />
-          <Stack.Screen name="Promocoes" component={EmptyFeatureScreen} initialParams={{ featureName: 'Promoções' }} />
-          <Stack.Screen name="Vouchers" component={EmptyFeatureScreen} initialParams={{ featureName: 'Vouchers' }} />
-
-        </>
-      )}
-
-      {/* Telas sempre acessíveis, inclusive por deep linking */}
-      <Stack.Screen
-        name="resetpassword"
-        component={ResetPasswordScreen}
-        options={{ title: 'Redefinir Senha', headerShown: false }}
-      />
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Search" component={Busca} />
+      <Stack.Screen name="Calendario" component={Calendar} />
+      <Stack.Screen name="Login" component={Login} />
+      <Stack.Screen name="Perfil" component={Perfil} />
+      <Stack.Screen name="EndPoints" component={Endpoints} />
+      <Stack.Screen name="AutorList" component={AutorList} />
+      <Stack.Screen name="AutorForm" component={AutorForm} />
+      <Stack.Screen name="AutorDetails" component={AutorDetails} />
+      <Stack.Screen name="AutorPublishings" component={AutorPublishings} />
+      <Stack.Screen name="ObraForm" component={ObraForm} />
+      <Stack.Screen name="ObraDetalhes" component={ObraDetalhes} />
+      <Stack.Screen name="Eventos" component={Eventos} />
+      <Stack.Screen name="EventoForm" component={EventoForm} />
+      <Stack.Screen name="EventoDetails" component={EventoDetails} />
+      <Stack.Screen name="Programacao" component={Programacao} />
+      <Stack.Screen name="ProgramacaoForm" component={ProgramacaoForm} />
+      <Stack.Screen name="ProgramacaoDetails" component={ProgramacaoDetails} />
+      <Stack.Screen name="UserList" component={UserList} />
+      <Stack.Screen name="UserForm" component={UserForm} />
+      <Stack.Screen name="ClippingForm" component={ClippingForm} />
+      <Stack.Screen name="EventoList" component={Eventos} />
+      <Stack.Screen name="ClippingList" component={ClippingList} />
+      <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+      <Stack.Screen name="DetalhesNoticias" component={DetalhesNoticia} />
+      <Stack.Screen name="Descontos" component={EmptyFeatureScreen} initialParams={{ featureName: 'Descontos' }} />
+      <Stack.Screen name="Promocoes" component={EmptyFeatureScreen} initialParams={{ featureName: 'Promoções' }} />
+      <Stack.Screen name="Vouchers" component={EmptyFeatureScreen} initialParams={{ featureName: 'Vouchers' }} />
     </Stack.Navigator>
+
   );
 
 };
@@ -111,15 +101,12 @@ export default function App() {
     },
   };
   
-  return (
-    <AuthProvider>
-      <NavigationContainer
-        linking={linking} // Adicione esta prop
-        fallback={<Text>Carregando...</Text>} // Fallback durante carregamento
-      > 
-        <MainNavigator />
-      </NavigationContainer>
-    </AuthProvider>
+  return (   
+    <NavigationContainer  linking={linking} fallback={<Text>Carregando...</Text>} > 
+      <AuthProvider>
+         <MainNavigator />
+      </AuthProvider>
+    </NavigationContainer>
   );
 }
 

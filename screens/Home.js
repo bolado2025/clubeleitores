@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Alert, Platform, ScrollView } from 'react-native';
+import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Platform, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { formatarData, calcularDiferencaDias } from '../utils/dateUtils';
@@ -7,6 +7,7 @@ import AutoresFavoritos from '../components/AutoresFavoritos';
 import NoticiasList from '../components/NoticiasList';
 import { useAuth } from '../AuthContext';
 import { useFocusEffect } from '@react-navigation/native';
+import showAlert from '../utils/alertUtils';
 
 export default function Home() {
 
@@ -194,7 +195,7 @@ export default function Home() {
             const confirmado = window.confirm('Tem certeza que deseja excluir este evento?');
             if (confirmado) excluirEvento(id);
         } else {
-            Alert.alert(
+            showAlert (
                 'Confirmar Exclusão',
                 'Tem certeza que deseja excluir este evento?',
                 [
@@ -218,18 +219,18 @@ export default function Home() {
             .then(res => {
                 console.log('Status da resposta:', res.status);
                 if (res.ok) {
-                    Alert.alert('Sucesso', 'Evento excluído com sucesso!');
+                    showAlert('Sucesso', 'Evento excluído com sucesso!');
                     carregarEventos();
                 } else {
                     res.text().then(texto => {
                         console.error('Erro na resposta:', texto);
-                        Alert.alert('Erro', 'Não foi possível excluir o evento.');
+                        showAlert('Erro', 'Não foi possível excluir o evento.');
                     });
                 }
             })
             .catch(err => {
                 console.error('Erro de rede:', err);
-                Alert.alert('Erro', 'Erro de rede ao tentar excluir o evento.');
+                showAlert('Erro', 'Erro de rede ao tentar excluir o evento.');
             });
     };
 
@@ -379,7 +380,7 @@ export default function Home() {
                         <TouchableOpacity
                             onPress={() => {
                                 if (!userInfo) {
-                                Alert.alert("Dica", "Você precisa estar logado para favoritar um evento.");
+                                showAlert("Dica", "Você precisa estar logado para favoritar um evento.");
                                 return;
                                 }
                                 toggleFavorito(item._id); }}
@@ -387,7 +388,7 @@ export default function Home() {
                             <Text style={{ fontSize: 16 }}>
                                 {isFavorito ? '❤️' : '🤍'}
                             </Text>
-                            </TouchableOpacity>
+                        </TouchableOpacity>
                     
                 </View>
             </View>

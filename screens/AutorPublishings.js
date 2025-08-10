@@ -71,13 +71,7 @@ export default function AutorPublishings() {
                 <Text style={styles.name}>{item.nome}</Text>
                 <View style={styles.buttons}>
                     <TouchableOpacity onPress={() => navigation.navigate('ObraDetalhes', { obra: item })}>
-                        <Text style={styles.link}>Ver</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('ObraForm', { idObra: item._id, idAutor })}>
-                        <Text style={styles.link}>Editar</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => confirmarExclusao(item._id)}>
-                        <Text style={[styles.link, { color: 'red' }]}>Excluir</Text>
+                        <Text style={styles.link}>Detalhes</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -92,12 +86,6 @@ export default function AutorPublishings() {
                 renderItem={renderItem}
                 ListEmptyComponent={<Text>Nenhuma obra encontrada.</Text>}
             />
-            <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => navigation.navigate('ObraForm', { idAutor })}
-            >
-                <Text style={styles.addText}>Incluir Nova Obra</Text>
-            </TouchableOpacity>
         </View>
     );
 }

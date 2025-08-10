@@ -35,24 +35,29 @@ const LoginScreen = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (authMode === 'signup') {
             if (formData.senha !== formData.confirmarSenha) {
                 showAlert('Erro', 'As senhas não coincidem');
                 return;
             }
             signUpWithEmail(formData);
+            
         } else {
-            loginWithEmail({
+            const user = await loginWithEmail({
                 email: formData.email,
                 senha: formData.senha
             });
+            if (user) {
+                // só redireciona se o login realmente funcionou
+                navigation.replace('Home');
+            } 
         }
     };
 
     const navigateToResetPassword = async () => {
         if (!formData.email) {
-            showAlert('Erro', 'Por favor, insira seu email');
+            showAlert('Erro', 'Por favor, informe somente seu email e pressione Esqueci minha senha novamente');
             console.log('⚠️ Email não informado');
             return;
         }
@@ -106,9 +111,6 @@ const LoginScreen = () => {
                             source={require('../assets/images/booklogo.jpg')}
                             style={styles.logo}
                         />
-
-                        <Text style={styles.title}>Administração AyoBooks</Text>
-                        <Text style={styles.subtitle}>Web & Apps - Clube de Leitores</Text>
 
                         {/* Removido o bloco condicional isRequestingReset */}
                         <View style={styles.formContainer}>
@@ -178,10 +180,10 @@ const LoginScreen = () => {
 
                             <TouchableOpacity
                                 style={styles.googleButton}
-                                onPress={signIn}
+                                onPress={() => signIn()} 
                             >
                                 <Image
-                                    source={require('../assets/images/google-icon.png')}
+                                    source={require('../assets/images/google_icon.png')}
                                     style={styles.googleIcon}
                                 />
                                 <Text style={styles.googleButtonText}>

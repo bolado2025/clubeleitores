@@ -186,13 +186,13 @@ const ProgramacaoDetails = () => {
         return (
             <View style={styles.loadingFullscreen}>
                 <ActivityIndicator size="large" color="#3498db" />
-                <Text style={styles.loadingText}>Carregando informações dos autores...</Text>
+                <Text style={styles.loadingText}>Carregando informações de Programação...</Text>
             </View>
         );
     }
 
     return (
-        <ScrollView style={styles.container}>
+        <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.titulo}>{programacao.nomeProgramacao}</Text>
                 <Text style={styles.data}>{new Date(programacao.dia).toLocaleDateString('pt-BR')}</Text>
@@ -206,7 +206,7 @@ const ProgramacaoDetails = () => {
                     <Text style={styles.semAtracoes}>Nenhuma atração cadastrada para este dia</Text>
                 }
             />
-        </ScrollView>
+        </View>
     );
 };
 

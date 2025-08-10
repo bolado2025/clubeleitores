@@ -154,9 +154,6 @@ export default function EventoDetails() {
             )}
 
             <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.button} onPress={editarEvento}>
-                    <Text style={styles.buttonText}>Editar Evento</Text>
-                </TouchableOpacity>
 
                 <TouchableOpacity
                     style={[styles.button, { backgroundColor: '#2ecc71' }]}

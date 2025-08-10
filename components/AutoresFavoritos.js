@@ -1,8 +1,9 @@
 import React, { useEffect, useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../AuthContext';
+import showAlert from '../utils/alertUtils';
 import axios from 'axios';
 
 const AutoresFavoritos = ({ navigation }) => {
@@ -111,7 +112,7 @@ const AutoresFavoritos = ({ navigation }) => {
     <TouchableOpacity
       onPress={() => {
         if (!userInfo) {
-          Alert.alert("Dica", "Você precisa estar logado para saber mais sobre um autor.");
+          showAlert("Dica", "Você precisa estar logado para saber mais sobre um autor.");
           return;
         }
         navigation.navigate('AutorDetails', { id: item._id || item.id, nome: item.nome, image: item.image });

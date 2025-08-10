@@ -1,9 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, FlatList, Image, TouchableOpacity, Alert, StyleSheet, Platform,ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import showAlert from '../utils/alertUtils';
+import { useAuth } from '../AuthContext';
+import { useFocusEffect } from '@react-navigation/native';
+
 
 const CustomImage = ({ source, style }) => {
     if (Platform.OS === 'web') {
@@ -38,6 +41,7 @@ export default function AutorList() {
     const [idUser, setIdUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigation = useNavigation();
+    const { userInfo } = useAuth();
 
     const carregarAutores = async () => {
         try {
@@ -51,6 +55,79 @@ export default function AutorList() {
             setLoading(false);
         }
     };
+
+    /*
+
+    const carregarAutores = async () => {
+        console.log('🔄 Iniciando a função carregarAutores...');
+    
+        try {
+            setLoading(true);
+            console.log('⏳ setLoading(true) chamado. Buscando dados da API...');
+    
+            const response = await fetch('https://hubleitoresapi.onrender.com/api/v1/autores');
+            console.log('✅ Resposta da API recebida:', response);
+    
+            const data = await response.json();
+            console.log('📦 Dados convertidos em JSON:', data);
+    
+            if (data && data.data) {
+                setAutores(data.data);
+                console.log('🧠 Autores definidos no estado:', data.data);
+            } else {
+                console.warn('⚠️ Estrutura de dados inesperada:', data);
+            }
+        } catch (error) {
+            console.error('❌ Erro ao buscar autores:', error);
+        } finally {
+            setLoading(false);
+            console.log('✅ setLoading(false) chamado. Fim da execução de carregarAutores.');
+        }
+    };
+    
+    */
+
+    const carregarAutoresFavoritos = async () => {
+        console.log('Iniciando carregamento de autores favoritos...');
+        
+        try {
+            setLoading(true);
+            console.log('Definido estado de loading como true.');
+            
+            // Recupera os dados do usuário do AsyncStorage
+            const userData = await AsyncStorage.getItem('@user');
+            console.log('Dados brutos do usuário recuperados do AsyncStorage:', userData);
+    
+            const parsedUser = JSON.parse(userData);
+            console.log('Dados do usuário após parse JSON:', parsedUser);
+    
+            const email = parsedUser?.email || '';
+            console.log('Email extraído do usuário logado:', email);
+    
+            if (!email) {
+                console.warn("Email do usuário ainda não definido. Encerrando execução.");
+                return;
+            }
+    
+            const url = `https://hubleitoresapi.onrender.com/api/v1/users/email/${encodeURIComponent(email)}/favoritos/autores`;
+            console.log('Fazendo requisição para o endpoint:', url);
+    
+            const response = await fetch(url);
+            console.log('Resposta da API recebida:', response);
+    
+            const data = await response.json();
+            console.log('Dados dos autores favoritos recebidos:', data);
+    
+            setFavoritos(data);
+            console.log('Estado de favoritos atualizado com os dados recebidos.');
+        } catch (error) {
+            console.error('Erro ao buscar autores favoritos:', error);
+        } finally {
+            setLoading(false);
+            console.log('Estado de loading definido como false. Finalizado carregamento.');
+        }
+    };
+    
 
     const carregarFavoritos = async (idUser) => {
         try {
@@ -117,18 +194,51 @@ export default function AutorList() {
 
         } catch (error) {
             console.error('Erro ao verificar o usuário:', error);
-            await AsyncStorage.removeItem('@user');
+            //await AsyncStorage.removeItem('@user');
             //setUserInfo(null);
         }
     };       
 
+    /*
     useEffect(() => {
         const carregarTudo = async () => {
             await recuperarIdUsuario(); // Aguarda recuperar o ID
             await carregarAutores();    // Pode ser async
         };
-        carregarTudo();
+        const carregarSomenteAutores = async () => {
+            //await recuperarIdUsuario(); // Aguarda recuperar o ID
+            await carregarAutores();    // Pode ser async
+        };
+
+        if (userInfo) {
+            carregarTudo();
+        }else{
+            carregarSomenteAutores();
+        }        
     }, []);
+    */
+
+    useFocusEffect(
+
+        useCallback(() => {
+           //useEffect(() => {    
+        
+              const carregarDados = async () => {
+                
+                carregarAutores();
+        
+                if (userInfo) {
+                    await carregarAutoresFavoritos();
+                } else {
+                    console.warn('Usuário ainda não disponível para carregar favoritos');
+                }
+            };
+        
+            carregarDados();    
+
+        }, [userInfo])
+    );    
+
 
     const confirmarExclusao = (id) => {
         showAlert(
@@ -167,6 +277,60 @@ export default function AutorList() {
     };
 
     const toggleFavorito = async (autorId) => {
+        try {
+            console.log('Iniciando toggleFavorito...');
+    
+            //setLoading(true);
+            console.log('Definido estado de loading como true.');
+    
+            // Recupera os dados do usuário do AsyncStorage
+            const userData = await AsyncStorage.getItem('@user');
+            console.log('Dados brutos do usuário recuperados do AsyncStorage:', userData);
+    
+            const parsedUser = JSON.parse(userData);
+            console.log('Dados do usuário após parse JSON:', parsedUser);
+    
+            const email = parsedUser?.email || '';
+            console.log('Email extraído do usuário logado:', email);
+    
+            if (!email) {
+                console.warn("Email do usuário ainda não definido. Encerrando execução.");
+                return;
+            }
+    
+            console.log('ID do autor:', autorId);
+    
+            const endpoint = `https://hubleitoresapi.onrender.com/api/v1/users/email/${encodeURIComponent(email)}/favoritos/autores/${autorId}`;
+            console.log('Endpoint da requisição PUT:', endpoint);
+    
+            const response = await fetch(endpoint, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+    
+            console.log('Resposta da requisição:', response);
+    
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Erro no fetch:', errorData);
+                throw new Error('Erro ao atualizar favoritos');
+            }
+    
+            const data = await response.json();
+            console.log('Nova lista de favoritos recebida:', data);
+            setFavoritos(data); // Atualiza com a nova lista de favoritos
+        } catch (error) {
+            console.error('Erro ao atualizar favoritos (try/catch):', error);
+        } finally {
+            //setLoading(false);
+            console.log('Estado de loading definido como false.');
+        }
+    };
+    
+
+    const _toggleFavorito = async (autorId) => {
         try {
             console.log('Iniciando toggleFavorito...');
             console.log('ID do usuário:', idUser);
@@ -225,6 +389,24 @@ export default function AutorList() {
             console.error("Erro ao ativar/desativar:", error);
         }
     };
+
+    const intercalarAutoresComBanners = (autores) => {
+        const resultado = [];
+        
+        autores.forEach((autor, index) => {
+          resultado.push(autor);
+          
+          // Insere um banner após cada 2 autores
+          if ((index + 1) % 2 === 0) {
+            resultado.push({
+              tipo: 'banner',
+              _id: `banner-${index}` // ID único para o banner
+            });
+          }
+        });
+        
+        return resultado;
+    };    
     
 
     const renderItem = ({ item }) => {
@@ -238,41 +420,24 @@ export default function AutorList() {
                 <View style={{ flex: 1 }}>
                     <Text style={styles.name}>{item.nome}</Text>
                     <View style={styles.buttons}>
-                        <TouchableOpacity onPress={() => toggleFavorito(item._id)}>
-                            <Text style={{ fontSize: 16 }}>
-                                {isFavorito ? '❤️' : '🤍'}
-                            </Text>
-                        </TouchableOpacity>
-
                         <TouchableOpacity onPress={() => navigation.navigate('AutorDetails', { id: item._id })}>
-                            <Text style={styles.link}>Ver</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => navigation.navigate('AutorForm', { id: item._id })}>
-                            <Text style={styles.link}>Editar</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => confirmarExclusao(item._id)}>
-                            <Text style={[styles.link, { color: 'red' }]}>Excluir</Text>
+                            <Text style={styles.link}>Saiba Mais..</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => navigation.navigate('AutorPublishings', { idAutor: item._id })}>
                             <Text style={styles.link}>Obras do Autor(a)</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            onPress={() => toggleAtivo(item._id, item.ativo)}
-                            style={{ flexDirection: 'row', alignItems: 'center' }}
-                        >
-                            <Text
-                                style={{
-                                    marginRight: 8,
-                                    color: item.ativo ? 'green' : 'red',
-                                    fontWeight: 'bold',
-                                }}
+                            onPress={() => {
+                                if (!userInfo) {
+                                Alert.alert("Dica", "Você precisa estar logado para favoritar um evento.");
+                                return;
+                                }
+                                toggleFavorito(item._id); }}
                             >
-                                {item.ativo ? 'Status Ativo' : 'Status Inativo'}
-                            </Text>
                             <Text style={{ fontSize: 16 }}>
-                                {item.ativo ? '🟢' : '🔴'}
+                                {isFavorito ? '❤️' : '🤍'}
                             </Text>
-                        </TouchableOpacity>
+                         </TouchableOpacity>
                     </View>
                 </View>
             </View>
@@ -281,28 +446,31 @@ export default function AutorList() {
     
 
     return (
-        <ScrollView style={styles.container}>
-            {loading ? (
-                <Text style={styles.loadingText}>Carregando autores...</Text>
-            ) : (
-                <FlatList
-                    data={autores}
-                    keyExtractor={item => item._id}
-                    renderItem={renderItem}
-                    ListEmptyComponent={
-                        <Text style={styles.emptyText}>Nenhum autor encontrado</Text>
-                    }
-                    contentContainerStyle={styles.listContent}
-                />
-            )}
-
-            <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => navigation.navigate('AutorForm')}
-            >
-                <Text style={styles.addText}>Adicionar Novo Autor</Text>
-            </TouchableOpacity>
-        </ScrollView>
+        <View style={styles.container}>
+          {loading ? (
+            <Text style={styles.loadingText}>Carregando autores...</Text>
+          ) : (
+            <FlatList
+              data={intercalarAutoresComBanners(autores)}
+              keyExtractor={(item, index) => item._id || `banner-${index}`}
+              renderItem={({ item }) => {
+                if (item.tipo === 'banner') {
+                  return (
+                    <View style={styles.bannerContainer}>
+                        <Text> --- Banner Ads --- </Text>
+                    </View>
+                  );
+                }
+                return renderItem({ item });
+              }}
+              ListEmptyComponent={
+                <Text style={styles.emptyText}>Nenhum autor encontrado</Text>
+              }
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+            />
+          )}
+        </View>
     );
 }
 
@@ -388,7 +556,18 @@ const styles = StyleSheet.create({
     buttons: { flexDirection: 'row', gap: 10, marginTop: 8 },
     link: { color: 'blue', marginRight: 10 },
     addButton: { marginTop: 16, backgroundColor: '#3498db', padding: 12, borderRadius: 8 },
-    addText: { color: '#fff', textAlign: 'center', fontWeight: 'bold' }
+    addText: { color: '#fff', textAlign: 'center', fontWeight: 'bold' },
+    bannerContainer: {
+        marginVertical: 15,
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 10,
+        backgroundColor: '#f9f9f9', // opcional
+        borderRadius: 8 // opcional
+    },
+    listContent: {
+    paddingBottom: 20
+    }
 });
 
 /*

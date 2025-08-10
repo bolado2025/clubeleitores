@@ -1,9 +1,13 @@
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Alert, Platform, ScrollView } from 'react-native';
+import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Platform, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { formatarData, calcularDiferencaDias } from '../utils/dateUtils';
+import AutoresFavoritos from '../components/AutoresFavoritos';
+import showAlert from '../utils/alertUtils';
+import { useAuth } from '../AuthContext';
+
 
 export default function Eventos() {
     const [eventos, setEventos] = useState([]);
@@ -11,11 +15,111 @@ export default function Eventos() {
     const [idUser, setIdUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigation = useNavigation();
-    
+
+    const route = useRoute();
+    const { tipo } = route.params;
+    const { userInfo } = useAuth();
+
+
+    const endpoint = process.env.EXPO_PUBLIC_AMBIENTE === 'dev'
+    ? process.env.EXPO_PUBLIC_API_URL_DEV
+    : process.env.EXPO_PUBLIC_API_URL_PROD;
+
+    /*const carregarEventos = async () => {
+        try {
+            let url = `${endpoint}/eventos`;
+            
+            if (tipo !== 'todos') {
+                url = `${endpoint}/eventos/tipo/${encodeURIComponent(tipo)}`;
+            }
+
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`Erro na resposta da API: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data && data.data) {
+                setEventos(data.data);
+            } else {
+                console.warn('Resposta inesperada da API:', data);
+            }
+        } catch (error) {
+            console.error('Erro ao buscar eventos:', error);
+        } finally {
+            setLoading(false);
+        }
+    };*/
 
     const carregarEventos = async () => {
         try {
-            const response = await fetch('https://hubleitoresapi.onrender.com/api/v1/eventos');
+            console.log('[1] - Iniciando carregamento de eventos...');
+            console.log('[2] - Tipo selecionado:', tipo);
+            
+            // Construção da URL
+            let url = `${endpoint}/eventos`;
+            if (tipo !== 'todos') {
+                url = `${endpoint}/eventos/tipo/${encodeURIComponent(tipo)}`;
+            }
+            console.log('[3] - URL construída:', url);
+    
+            // Chamada à API
+            console.log('[4] - Fazendo requisição para a API...');
+            const response = await fetch(url);
+            console.log('[5] - Resposta recebida. Status:', response.status);
+    
+            // Verificação da resposta
+            if (!response.ok) {
+                const errorResponse = await response.text();
+                console.error('[6] - Erro na resposta:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    url: url,
+                    responseText: errorResponse
+                });
+                throw new Error(`Erro na resposta da API: ${response.status}`);
+            }
+    
+            // Processamento dos dados
+            console.log('[7] - Processando JSON da resposta...');
+            const data = await response.json();
+            console.log('[8] - Dados recebidos:', {
+                estrutura: Object.keys(data),
+                contagemEventos: data.data ? data.data.length : 0,
+                exemploPrimeiroEvento: data.data ? data.data[0] : null
+            });
+    
+            // Atualização do estado
+            if (data && data.data) {
+                console.log('[9] - Atualizando estado com eventos recebidos');
+                setEventos(data.data);
+            } else {
+                console.warn('[10] - Resposta inesperada da API. Estrutura:', {
+                    dataRecebida: data,
+                    esperado: { data: "array de eventos" } // Corrigido aqui
+                });
+            }
+        } catch (error) {
+            console.error('[11] - Erro no bloco catch:', {
+                mensagem: error.message,
+                stack: error.stack,
+                tipoErro: typeof error
+            });
+        } finally {
+            console.log('[12] - Finalizando carregamento');
+            setLoading(false);
+        }
+    };
+    
+
+    /*
+    const carregarEventos = async () => {
+        try {
+            const response = await fetch(`${endpoint}/eventos`);
+
+            console.log ("Endereço Endpoint --->", response);
 
             if (!response.ok) {
                 throw new Error(`Erro na resposta da API: ${response.status}`);
@@ -33,7 +137,49 @@ export default function Eventos() {
             console.error('Erro ao buscar eventos:', error);
         }
     };
+    */
     
+
+    const carregarEventosFavoritos = async () => {
+        console.log('Iniciando carregamento de eventos favoritos...');
+        
+        try {
+            setLoading(true);
+            console.log('Definido estado de loading como true.');
+    
+            // Recupera os dados do usuário do AsyncStorage
+            const userData = await AsyncStorage.getItem('@user');
+            console.log('Dados brutos do usuário recuperados do AsyncStorage:', userData);
+    
+            const parsedUser = JSON.parse(userData);
+            console.log('Dados do usuário após parse JSON:', parsedUser);
+    
+            const email = parsedUser?.email || '';
+            console.log('Email extraído do usuário logado:', email);
+    
+            if (!email) {
+                console.warn("Email do usuário ainda não definido. Encerrando execução.");
+                return;
+            }
+    
+            const url = `${endpoint}/users/email/${encodeURIComponent(email)}/favoritos/eventos`;
+            console.log('Fazendo requisição para o endpoint:', url);
+    
+            const response = await fetch(url);
+            console.log('Resposta recebida da API:', response);
+    
+            const data = await response.json();
+            console.log('Dados dos eventos favoritos recebidos:', data);
+    
+            setFavoritos(data);
+            console.log('Estado de favoritos atualizado com os dados recebidos.');
+        } catch (error) {
+            console.error('Erro ao buscar favoritos:', error);
+        } finally {
+            setLoading(false);
+            console.log('Estado de loading definido como false. Finalizado carregamento.');
+        }
+    };
 
     const carregarFavoritos = async (idUser) => {
         try {
@@ -44,7 +190,7 @@ export default function Eventos() {
                 console.warn("ID do usuário ainda não definido.");
                 return;
             }
-            const response = await fetch(`https://hubleitoresapi.onrender.com/api/v1/users/${idUser}/favoritos/eventos`);
+            const response = await fetch(`${endpoint}/users/${idUser}/favoritos/eventos`);
             const data = await response.json();
             setFavoritos(data);
         } catch (error) {
@@ -70,7 +216,7 @@ export default function Eventos() {
             const requestBody = { email: user.email };
             console.log('Payload da requisição:', requestBody);
 
-            const response = await fetch('https://hubleitoresapi.onrender.com/api/v1/users/verifyUserId', {
+            const response = await fetch(`${endpoint}/users/verifyUserId`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -83,8 +229,8 @@ export default function Eventos() {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('Erro na resposta da API:', errorText);
-                throw new Error('User verification failed');
+                console.log('Erro na resposta da API:', errorText);
+                //throw new Error('User verification failed');
             }
 
             const data = await response.json();
@@ -95,24 +241,83 @@ export default function Eventos() {
                 setIdUser(data.userId);
                 carregarFavoritos(data.userId);
             } else {
-                console.warn('Resposta da API não contém userId');
+                console.log('Resposta da API não contém userId');
             }
 
         } catch (error) {
-            console.error('Erro ao verificar o usuário:', error);
-            await AsyncStorage.removeItem('@user');
+            console.log('Erro ao verificar o usuário:', error);
+            //await AsyncStorage.removeItem('@user');
             //setUserInfo(null);
         }
     };
 
+    const getLocalUser = async () => {
+        const data = await AsyncStorage.getItem('@user');
+        return data ? JSON.parse(data) : null;
+    };  
 
-    useEffect(() => {    
+    const sincronizaUsuario = async () => {
+        const user = await getLocalUser();
+
+        if (user) {
+            console.log('👤 Usuário recuperado com sucesso:');
+            Object.entries(user).forEach(([key, value]) => {
+                console.log(`🔑 ${key}:`, value);
+            });
+        } else {
+            console.log('⚠️ Nenhum usuário encontrado no AsyncStorage.');
+        }
+        
+        if (user?.localData?.backendUserId == null) {
+            console.log("[initializeAuth] BackendUserId não encontrado. Iniciando sincronização...");
+            await syncWithBackendnoDelay(user); // Adicionei 'await' para garantir conclusão
+            console.log("[initializeAuth] Sincronização com backend concluída!");
+        } else {
+            console.log("[initializeAuth] Usuário já possui backendUserId. Nenhuma sincronização necessária.");
+        }
+    }
+
+
+    useEffect(() => {
+        //carregarEventos();
+
+        const carregarDados = async () => {
+            
+            carregarEventos();
+    
+            if (userInfo) {
+                await carregarEventosFavoritos();
+            } else {
+                console.warn('Usuário ainda não disponível para carregar favoritos');
+            }
+        };
+    
+        carregarDados(); 
+
+    }, [tipo]);
+
+
+    /*useEffect(() => {   
+        
+        console.log('Entrou no UseEffect ............................................................................');
+
         const carregarTudo = async () => {
+            await sincronizaUsuario();                
             await recuperarIdUsuario(); // Aguarda recuperar o ID
             await carregarEventos();    // Pode ser async
         };
-        carregarTudo();
-    }, []);
+        const carregarSomenteEventos = async () => {
+            //await recuperarIdUsuario(); // Aguarda recuperar o ID
+            await carregarEventos();    // Pode ser async
+        };
+
+        if (userInfo) {
+          carregarTudo();
+        }else{
+            carregarSomenteEventos();
+        }
+    }, [userInfo]);
+    */
 
     const confirmarExclusao = (id) => {
         console.log('Clicou em Excluir - ID:', id);
@@ -121,7 +326,7 @@ export default function Eventos() {
             const confirmado = window.confirm('Tem certeza que deseja excluir este evento?');
             if (confirmado) excluirEvento(id);
         } else {
-            Alert.alert(
+            showAlert(
                 'Confirmar Exclusão',
                 'Tem certeza que deseja excluir este evento?',
                 [
@@ -139,24 +344,24 @@ export default function Eventos() {
     const excluirEvento = (id) => {
         console.log('Enviando requisição DELETE para ID:', id);
 
-        fetch(`https://hubleitoresapi.onrender.com/api/v1/eventos/${id}`, {
+        fetch(`${endpoint}/eventos/${id}`, {
             method: 'DELETE'
         })
             .then(res => {
                 console.log('Status da resposta:', res.status);
                 if (res.ok) {
-                    Alert.alert('Sucesso', 'Evento excluído com sucesso!');
+                    showAlert('Sucesso', 'Evento excluído com sucesso!');
                     carregarEventos();
                 } else {
                     res.text().then(texto => {
                         console.error('Erro na resposta:', texto);
-                        Alert.alert('Erro', 'Não foi possível excluir o evento.');
+                        showAlert('Erro', 'Não foi possível excluir o evento.');
                     });
                 }
             })
             .catch(err => {
                 console.error('Erro de rede:', err);
-                Alert.alert('Erro', 'Erro de rede ao tentar excluir o evento.');
+                showAlert('Erro', 'Erro de rede ao tentar excluir o evento.');
             });
     };
 
@@ -166,7 +371,42 @@ export default function Eventos() {
             console.log('ID do usuário:', idUser);
             console.log('ID do evento:', eventoId);
 
-            const response = await fetch(`https://hubleitoresapi.onrender.com/api/v1/users/${idUser}/favoritos/eventos/${eventoId}`, {
+            const userData = await AsyncStorage.getItem('@user');
+            const parsedUser = JSON.parse(userData);
+            const email = parsedUser?.email || '';
+            console.log ('email --------------------->', email);
+            const emailEncoded = encodeURIComponent(email);
+
+            const response = await fetch(`${endpoint}/users/email/${emailEncoded}/favoritos/eventos/${eventoId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            console.log('Resposta da requisição:', response);
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Erro no fetch:', errorData);
+                throw new Error('Erro ao atualizar favoritos');
+            }
+
+            const data = await response.json();
+            console.log('Nova lista de favoritos recebida:', data);
+            setFavoritos(data); // Atualiza com a nova lista de favoritos
+        } catch (error) {
+            console.error('Erro ao atualizar favoritos (try/catch):', error);
+        }
+    };    
+
+    const _toggleFavorito = async (eventoId) => {
+        try {
+            console.log('Iniciando toggleFavorito...');
+            console.log('ID do usuário:', idUser);
+            console.log('ID do evento:', eventoId);
+
+            const response = await fetch(`${endpoint}/users/${idUser}/favoritos/eventos/${eventoId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -191,7 +431,8 @@ export default function Eventos() {
 
     const toggleAtivo = async (id, ativoAtual) => {
         try {
-            const url = `https://hubleitoresapi.onrender.com/api/v1/eventos/${id}/ativo`;
+
+            const url = `${endpoint}/eventos/${id}/ativo`;
             const payload = { ativo: !ativoAtual };
 
             console.log('🔄 Requisição PATCH para:', url);
@@ -230,7 +471,7 @@ export default function Eventos() {
                 <Image
                     source={{
                         uri: item.imagemBinaria
-                            ? `https://hubleitoresapi.onrender.com/api/v1/eventos/${item._id}/imagem` // Cache busting
+                            ? `${endpoint}/eventos/${item._id}/imagem` // Cache busting
                             : item.imagem
                     }}
                     style={styles.image}
@@ -249,40 +490,25 @@ export default function Eventos() {
                 <Text style={styles.info2}>Faltam: {calcularDiferencaDias(formatarData(item.dataInicial))} dias.</Text>
 
                 <View style={styles.buttons}>
-                    <TouchableOpacity onPress={() => toggleFavorito(item._id)}>
-                        <Text style={{ fontSize: 16 }}>
-                            {isFavorito ? '❤️' : '🤍'}
-                        </Text>
-                    </TouchableOpacity>
                     <TouchableOpacity onPress={() => navigation.navigate('EventoDetails', { id: item._id })}>
-                        <Text style={styles.link}>Ver</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('EventoForm', { id: item._id })}>
-                        <Text style={styles.link}>Editar</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => confirmarExclusao(item._id)}>
-                        <Text style={[styles.link, { color: 'red' }]}>Excluir</Text>
+                        <Text style={styles.link}>Saber Mais..</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => navigation.navigate('Programacao', { idEvento: item._id })}>
                         <Text style={styles.link}>Programação</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={() => toggleAtivo(item._id, item.ativo)}
-                        style={{ flexDirection: 'row', alignItems: 'center' }}
-                    >
-                        <Text
-                            style={{
-                                marginRight: 8,
-                                color: item.ativo ? 'green' : 'red',
-                                fontWeight: 'bold',
-                            }}
-                        >
-                            {item.ativo ? 'Status Ativo' : 'Status Inativo'}
-                        </Text>
-                        <Text style={{ fontSize: 16 }}>
-                            {item.ativo ? '🟢' : '🔴'}
-                        </Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                if (!userInfo) {
+                                showAlert("Dica", "Você precisa estar logado para favoritar um evento.");
+                                return;
+                                }
+                                toggleFavorito(item._id); }}
+                            >
+                            <Text style={{ fontSize: 16 }}>
+                                {isFavorito ? '❤️' : '🤍'}
+                            </Text>
+                         </TouchableOpacity>
+                 
                 </View>
             </View>
         </View>
@@ -291,17 +517,25 @@ export default function Eventos() {
     
 
     return (
-        <ScrollView style={styles.container}>
+        <View style={styles.container}>
+       
+            <AutoresFavoritos navigation={navigation} />
+
             <FlatList
                 data={eventos}
                 keyExtractor={item => item._id}
                 renderItem={renderItem}
+                ListFooterComponent={
+                    <View style={{ paddingTop: 24 }}>
+                        <Text>--- Banner --- </Text>
+                    </View>                    
+                }
                 ListEmptyComponent={<Text style={styles.emptyText}>Nenhum evento encontrado.</Text>}
+                contentContainerStyle={{ paddingBottom: 100 }}
+                showsVerticalScrollIndicator={false}
             />
-            <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('EventoForm')}>
-                <Text style={styles.addText}>Incluir Novo Evento</Text>
-            </TouchableOpacity>
-        </ScrollView>
+
+        </View>
     );
 }
 

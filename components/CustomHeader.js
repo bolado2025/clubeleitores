@@ -59,13 +59,11 @@ export default function CustomHeader() {
 
     const menuItems = [
         { name: 'Home', label: 'HomeScreen' },
-        { name: 'EndPoints', label: 'EndPoints' },
-        { name: 'AutorList', label: 'Autores&Obras' },
-        { name: 'Eventos', label: 'Eventos&Prog.' },
-        { name: 'UserList', label: 'Usuários' },
-        { name: 'ClippingList', label: 'Clippings' },
+        { name: 'AutorList', label: 'Autores' },
+        { name: 'Search', label: 'Busca' },
+        { name: 'Calendario', label: 'Calendário' },
+        { name: userInfo ? 'Perfil' : 'Login', label: userInfo ? 'Perfil' : 'Login' },
     ];
-
 
     // E na função renderMenuItem:
     const renderMenuItem = (item, isModal = false) => (
